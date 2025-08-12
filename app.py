@@ -246,7 +246,7 @@ def main():
     if debug_mode:
         render_debug_sidebar(debug_logger)
 
-    st.title("📰 조선일보 AI POC 시연")
+    st.title("📰 AI POC 시연")
 
     question = st.text_input("🔍 검색어 입력", "", key="unique_question_input")
 
@@ -403,7 +403,6 @@ def main():
                                 st.markdown(f"[기사 원문 보기]({link})")
                             else:
                                 st.write("*링크 없음*")
-                            st.markdown("**출처: 조선일보**")
                 else:
                     st.warning("⚠ 관련 뉴스가 없습니다.")
 
