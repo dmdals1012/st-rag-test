@@ -7,10 +7,8 @@ from datetime import datetime, timedelta
 import boto3
 import pandas as pd
 
-
 API_URL = "http://54.180.25.122:80/api/v1/chat/message"
 CHATROOM_ID = "d34fd4c4-e4d6-43c9-bb6f-964401085b7e"
-
 
 def linkify_news_numbers(answer, references):
     def replace_func(match):
@@ -22,23 +20,51 @@ def linkify_news_numbers(answer, references):
         return match.group(0)
     return re.sub(r"\b(\d+)\b", replace_func, answer)
 
-
 def inject_custom_css():
     st.markdown(
         """
     <style>
-    body, .stApp { background-color: #f8f8fa; font-family: 'Segoe UI', sans-serif; }
-    h1 { color: #8B0000; border-bottom: 2px solid #8B0000; }
-    .debug-log { background-color: #f8f9fa; font-family: 'Consolas', monospace; font-size: 13px; max-height: 600px; white-space: pre-wrap; overflow-y: auto; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;}
+    /* 공통 스타일 */
+    body, .stApp {
+        font-family: 'Segoe UI', sans-serif; 
+    }
+    h1 { 
+        border-bottom: 2px solid #8B0000; 
+    }
+    .debug-log { 
+        font-family: 'Consolas', monospace; 
+        font-size: 13px; 
+        max-height: 600px; 
+        white-space: pre-wrap; 
+        overflow-y: auto; 
+        border-radius: 8px; 
+        padding: 12px; 
+        border: 1px solid;
+    }
+
+    /* 라이트 모드 전용 */
+    @media (prefers-color-scheme: light) {
+        body, .stApp { background-color: #f8f8fa; color: #000000; }
+        h1 { color: #8B0000; }
+        .debug-log { background-color: #f8f9fa; border-color: #e2e8f0; color: #000000; }
+    }
+
+    /* 다크 모드 전용 */
+    @media (prefers-color-scheme: dark) {
+        body, .stApp { background-color: #0e1117; color: #FFFFFF; }
+        h1 { color: #ff6b6b; border-bottom: 2px solid #ff6b6b; }
+        .debug-log { background-color: #1e222a; border-color: #3a3f4b; color: #f5f5f5; }
+        a { color: #4dabf7; }
+        .stMarkdown, .stText, p, span, div { color: #ffffff !important; }
+    }
     </style>
     """,
         unsafe_allow_html=True,
     )
 
 # ------------------------------------------------------------------------
-# 최신 스트림 한 개만 지정해서 그 안의 로그만 가져오는 방식 적용
+# 최신 스트림 한 개만 지정해서 그 안의 로그만 가져오는 방식
 # ------------------------------------------------------------------------
-
 class DebugLogger:
     def __init__(self):
         self._ensure_session_state()
@@ -82,7 +108,6 @@ class DebugLogger:
             self.add_log("ERROR", f"CloudWatch client setup failed: {e}")
 
     def get_latest_log_stream_name(self, log_group_name):
-        """CloudWatch에서 최신 로그 스트림 이름을 반환"""
         try:
             resp = self.cloudwatch_client.describe_log_streams(
                 logGroupName=log_group_name,
@@ -99,7 +124,6 @@ class DebugLogger:
             return None
 
     def fetch_logs_from_latest_stream(self, log_group_name, limit=50):
-        """최신 로그 스트림에서만 이벤트를 가져온다."""
         if not self.cloudwatch_client:
             self.add_log("ERROR", "CloudWatch client not initialized")
             return []
@@ -127,7 +151,8 @@ class DebugLogger:
             return []
 
 # ------------------------------------------------------------------------
-
+# 로그 다운로드 버튼
+# ------------------------------------------------------------------------
 def render_log_download_button(logs, label="로그 다운로드", key="download_logs"):
     full_log_text = ""
     for log in logs:
@@ -148,7 +173,9 @@ def render_log_download_button(logs, label="로그 다운로드", key="download_
         key=key,
     )
 
-
+# ------------------------------------------------------------------------
+# 디버그 사이드바
+# ------------------------------------------------------------------------
 def render_debug_sidebar(debug_logger):
     st.sidebar.markdown("## 🐛 디버그 모드")
     col1, col2, col3 = st.sidebar.columns([1, 1, 1])
@@ -192,7 +219,6 @@ def render_debug_sidebar(debug_logger):
 
     with tab2:
         st.markdown("### ☁️ CloudWatch (최신 로그 스트림 로그)")
-        # 최신 스트림에 대해 로그 새로고침
         if st.button("로그 새로고침", key="refresh_cw_logs"):
             logs = debug_logger.fetch_logs_from_latest_stream(
                 log_group_name="/aws/lambda/vector-search-api",
@@ -234,7 +260,9 @@ def render_debug_sidebar(debug_logger):
         else:
             st.info("아직 프롬프트가 수신되지 않았습니다.")
 
-
+# ------------------------------------------------------------------------
+# 메인 실행
+# ------------------------------------------------------------------------
 def main():
     inject_custom_css()
     if "debug_logger" not in st.session_state:
@@ -246,7 +274,7 @@ def main():
     if debug_mode:
         render_debug_sidebar(debug_logger)
 
-    st.title("📰 AI POC 시연")
+    st.title("📰 Solar Pro2 뉴스 검색 POC")
 
     question = st.text_input("🔍 검색어 입력", "", key="unique_question_input")
 
@@ -403,6 +431,7 @@ def main():
                                 st.markdown(f"[기사 원문 보기]({link})")
                             else:
                                 st.write("*링크 없음*")
+                            st.markdown("**출처: 조선일보**")
                 else:
                     st.warning("⚠ 관련 뉴스가 없습니다.")
 
@@ -428,7 +457,6 @@ def main():
             if total_elapsed is None:
                 total_elapsed = time.time() - start_time
                 time_placeholder.success(f"✅ 전체 소요 시간: {total_elapsed:.2f}초")
-
 
 if __name__ == "__main__":
     main()
