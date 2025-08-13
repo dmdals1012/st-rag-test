@@ -20,12 +20,10 @@ def linkify_news_numbers(answer, references):
         if references and 1 <= num <= len(references):
             link = references[num - 1].get("link", "")
             if link:
-                # 숫자만 링크로 감싸되, [숫자] 형태로 출력
-                return f"[{num}]({link})"
+                return f"[{num}]({link})"  # 대괄호 포함 유지하며 링크 걸기
         return match.group(0)
 
-    # 숫자만 매칭해서 링크 걸기
-    return re.sub(r"\b(\d+)\b", replace_func, answer)
+    return re.sub(r"\[(\d+)\]", replace_func, answer)
 
 def inject_custom_css():
     st.markdown(
