@@ -10,15 +10,22 @@ import pandas as pd
 API_URL = "http://54.180.25.122:80/api/v1/chat/message"
 CHATROOM_ID = "d34fd4c4-e4d6-43c9-bb6f-964401085b7e"
 
+# 수정된 뉴스 번호 링크 변환 함수
 def linkify_news_numbers(answer, references):
     def replace_func(match):
-        num = int(match.group(1))
+        try:
+            num = int(match.group(1))
+        except ValueError:
+            return match.group(0)
+
         if references and 1 <= num <= len(references):
             link = references[num - 1].get("link", "")
             if link:
                 return f"[{num}]({link})"
         return match.group(0)
-    return re.sub(r"\b(\d+)\b", replace_func, answer)
+
+    # 기존 \b(\d+)\b → [숫자]만 매칭하게 변경
+    return re.sub(r"\[(\d+)\]", replace_func, answer)
 
 def inject_custom_css():
     st.markdown(
