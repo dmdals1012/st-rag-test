@@ -274,7 +274,7 @@ def main():
     if debug_mode:
         render_debug_sidebar(debug_logger)
 
-    st.title("📰 Solar Pro2 뉴스 검색 POC")
+    st.title("📰 Solar Pro2 뉴스 검색 프롬프트 테스트")
 
     question = st.text_input("🔍 검색어 입력", "", key="unique_question_input")
 
