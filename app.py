@@ -15,14 +15,16 @@ def linkify_news_numbers(answer, references):
         try:
             num = int(match.group(1))
         except ValueError:
-            return match.group(0)
+            return match.group(0)  # 매칭 실패하면 원본 그대로 리턴
 
         if references and 1 <= num <= len(references):
             link = references[num - 1].get("link", "")
             if link:
-                return f"[{num}]({link})"  # 대괄호 포함 유지하며 링크 걸기
+                # 대괄호 포함된 형태 그대로 유지하고 링크 걸어야 함
+                return f"[{num}]({link})"
         return match.group(0)
 
+    # [숫자] 형태만 골라서 치환
     return re.sub(r"\[(\d+)\]", replace_func, answer)
 
 def inject_custom_css():
